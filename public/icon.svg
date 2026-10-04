@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="terrasGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="cupGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#terrasGrad)" />
+  <!-- Cup Body -->
+  <path d="M160 170 L185 410 C187 430 205 446 226 446 L286 446 C307 446 325 430 327 410 L352 170 Z" fill="#ffffff" fill-opacity="0.2" />
+  <path d="M170 185 L192 400 C194 415 208 428 224 428 L288 428 C304 428 318 415 320 400 L342 185 Z" fill="url(#cupGrad)" />
+  <!-- Cup Lid / Rim -->
+  <rect x="145" y="152" width="222" height="26" rx="13" fill="#ffffff" />
+  <path d="M190 152 Q256 110 322 152 Z" fill="#e2e8f0" />
+  <!-- Straw -->
+  <path d="M290 80 L310 80 L280 160 L260 160 Z" fill="#ef4444" />
+  <!-- Boba / Drink Pearls -->
+  <circle cx="230" cy="380" r="14" fill="#451a03" />
+  <circle cx="265" cy="390" r="16" fill="#451a03" />
+  <circle cx="295" cy="375" r="13" fill="#451a03" />
+  <circle cx="220" cy="345" r="12" fill="#451a03" />
+  <circle cx="255" cy="355" r="15" fill="#451a03" />
+  <circle cx="285" cy="340" r="12" fill="#451a03" />
+  <!-- Tea Leaf Accent -->
+  <path d="M220 120 C200 95 230 70 255 80 C265 105 240 125 220 120 Z" fill="#22c55e" />
+  <!-- Text -->
+  <text x="256" y="485" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" fill="#ffffff" letter-spacing="2">KEDAI TERAS</text>
+</svg>
