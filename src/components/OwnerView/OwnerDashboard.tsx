@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
   TrendingUp, DollarSign, Coffee, Calendar, ShieldCheck,
   AlertTriangle, ArrowUpRight, ArrowDownRight, Eye,
-  Sparkles, Filter, CheckCircle2, ChevronRight, X
+  Sparkles, Filter, CheckCircle2, ChevronRight, X,
+  Landmark, Wallet, Lock, Unlock, ArrowRight
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -17,7 +18,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Line, Bar, Chart } from 'react-chartjs-2';
-import { Closing, Menu, Ingredient, Recipe, User } from '../../types';
+import { Closing, Menu, Ingredient, Recipe, User, MonthlyClosingReport, CashTransaction } from '../../types';
 import {
   formatRupiah, formatNumber, formatIndonesianDate,
   getIndonesianDayName, isSunday
@@ -44,8 +45,20 @@ interface OwnerDashboardProps {
   ingredients: Ingredient[];
   recipes: Recipe[];
   users: User[];
-  onRestock?: (ingredientId: string, additionalStock: number) => void;
+  monthlyReports?: MonthlyClosingReport[];
+  cashTransactions?: CashTransaction[];
+  onRestock?: (
+    ingredientId: string,
+    additionalStock: number,
+    source?: 'Marketplace' | 'Langsung',
+    options?: {
+      newUnitPrice?: number;
+      totalCost?: number;
+      priceUpdateMode?: 'moving_average' | 'last_price' | 'keep_old';
+    }
+  ) => void;
   onNavigateToStock?: () => void;
+  onNavigateToMonthlyReport?: () => void;
 }
 
 export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
@@ -54,8 +67,11 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
   ingredients,
   recipes,
   users,
+  monthlyReports = [],
+  cashTransactions = [],
   onRestock,
   onNavigateToStock,
+  onNavigateToMonthlyReport,
 }) => {
   const [selectedClosing, setSelectedClosing] = useState<Closing | null>(null);
   const [timeFilter, setTimeFilter] = useState<'all' | 'recent'>('all');
@@ -283,6 +299,73 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
         onRestock={onRestock}
         onNavigateToStock={onNavigateToStock}
       />
+
+      {/* Keadaan Kas Bulanan & Status Tutup Buku Widget */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white p-5 rounded-3xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+            <Landmark className="w-6 h-6 text-emerald-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                Pembukuan Bulanan ({monthlyReports.length > 0 ? monthlyReports[monthlyReports.length - 1].bulanTahun : '2026-10'})
+              </span>
+              {monthlyReports.length > 0 && monthlyReports[monthlyReports.length - 1].status === 'Closed' ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-800 text-emerald-200 border border-emerald-600">
+                  <Lock className="w-3 h-3 text-emerald-300" />
+                  Tutup Buku Closed
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                  <Unlock className="w-3 h-3 text-amber-300" />
+                  Buku Berjalan (Open)
+                </span>
+              )}
+            </div>
+            <h3 className="text-base sm:text-lg font-black tracking-tight mt-0.5 text-white">
+              Pemisahan Kas Tunai Lapak &amp; Kas Bank Marketplace
+            </h3>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Belanja langsung offline memotong kas tunai, restock marketplace Shopee/Tokopedia memotong kas bank.
+            </p>
+          </div>
+        </div>
+
+        {/* Cash Balance Pills */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="bg-white/10 px-3.5 py-2 rounded-2xl border border-white/10">
+            <span className="text-[10px] font-bold text-amber-300 block flex items-center gap-1">
+              <Wallet className="w-3 h-3 text-amber-300" />
+              Kas Tunai (Laci):
+            </span>
+            <span className="text-sm font-extrabold text-white">
+              {formatRupiah(monthlyReports.length > 0 ? monthlyReports[monthlyReports.length - 1].saldoFisikTunai || 3120000 : 3120000)}
+            </span>
+          </div>
+
+          <div className="bg-white/10 px-3.5 py-2 rounded-2xl border border-white/10">
+            <span className="text-[10px] font-bold text-blue-300 block flex items-center gap-1">
+              <Landmark className="w-3 h-3 text-blue-300" />
+              Kas Bank (BCA):
+            </span>
+            <span className="text-sm font-extrabold text-white">
+              {formatRupiah(monthlyReports.length > 0 ? monthlyReports[monthlyReports.length - 1].saldoNyataBank || 17650000 : 17650000)}
+            </span>
+          </div>
+
+          {onNavigateToMonthlyReport && (
+            <button
+              type="button"
+              onClick={onNavigateToMonthlyReport}
+              className="px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-stretch md:self-auto justify-center"
+            >
+              <span>Laporan &amp; Tutup Buku</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

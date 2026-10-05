@@ -1,9 +1,10 @@
 import {
-  User, Menu, Ingredient, Recipe, Closing, Kasbon, Absensi, Payroll, AppState, OperationalExpenseMaster
+  User, Menu, Ingredient, Recipe, Closing, Kasbon, Absensi, Payroll, AppState, OperationalExpenseMaster, CashTransaction, MonthlyClosingReport
 } from '../types';
 import {
   initialUsers, initialIngredients, initialMenus, initialRecipes, initialExpenseMaster,
-  generateSeedClosings, initialAbsensi, initialKasbon, initialPayroll
+  generateSeedClosings, initialAbsensi, initialKasbon, initialPayroll,
+  initialCashTransactions, initialMonthlyReports
 } from './initialData';
 
 const STORAGE_KEY = 'kedai_teras_db_v1.1';
@@ -16,6 +17,12 @@ export function loadAppState(): AppState {
       if (parsed.users && parsed.menus && parsed.closings) {
         if (!parsed.expenseMaster || parsed.expenseMaster.length === 0) {
           parsed.expenseMaster = initialExpenseMaster;
+        }
+        if (!parsed.cashTransactions || parsed.cashTransactions.length === 0) {
+          parsed.cashTransactions = initialCashTransactions;
+        }
+        if (!parsed.monthlyReports || parsed.monthlyReports.length === 0) {
+          parsed.monthlyReports = initialMonthlyReports;
         }
         return parsed;
       }
@@ -35,6 +42,8 @@ export function loadAppState(): AppState {
     closings: generateSeedClosings(),
     kasbon: initialKasbon,
     payroll: initialPayroll,
+    cashTransactions: initialCashTransactions,
+    monthlyReports: initialMonthlyReports,
     currentUserId: null, // First page opened is login for each role
   };
   saveAppState(defaultState);
@@ -60,7 +69,9 @@ export function resetToDefaultState(): AppState {
     closings: generateSeedClosings(),
     kasbon: initialKasbon,
     payroll: initialPayroll,
-    currentUserId: null, // Return to login page on reset
+    cashTransactions: initialCashTransactions,
+    monthlyReports: initialMonthlyReports,
+    currentUserId: null,
   };
   saveAppState(defaultState);
   return defaultState;

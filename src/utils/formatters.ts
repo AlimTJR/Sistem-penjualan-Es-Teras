@@ -60,3 +60,11 @@ export function getMonthNameIndo(monthIndex: number): string {
   ];
   return months[monthIndex];
 }
+
+export function getIndonesianMonthName(monthNumber: number): string {
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  return months[(monthNumber - 1) % 12] || '';
+}

@@ -140,6 +140,51 @@ export interface Payroll {
   tanggalBayar?: string;
 }
 
+export type PaymentChannel = 'Tunai' | 'Bank';
+export type TutupBukuStatus = 'Open' | 'Closed';
+
+export type CashTransactionCategory =
+  | 'Penjualan Laci'
+  | 'Setor Bank'
+  | 'Belanja Langsung'
+  | 'Beli Marketplace'
+  | 'Gaji Karyawan'
+  | 'Kas Masuk Lain'
+  | 'Saldo Awal'
+  | 'Penyesuaian';
+
+export interface CashTransaction {
+  id: string;
+  tanggal: string; // YYYY-MM-DD
+  kategori: CashTransactionCategory;
+  tipe: 'Masuk' | 'Keluar' | 'Transfer';
+  metode: PaymentChannel; // Tunai (Lapak) vs Bank (Rekening)
+  nominal: number;
+  keterangan: string;
+  referensiId?: string;
+  createdAt: string;
+}
+
+export interface MonthlyClosingReport {
+  id: string;
+  bulanTahun: string; // YYYY-MM (e.g. '2026-09', '2026-10')
+  status: TutupBukuStatus; // 'Open' | 'Closed'
+  tanggalTutup?: string; // YYYY-MM-DD HH:mm
+  ditutupOleh?: string;
+
+  // Saldo Awal
+  saldoAwalTunai: number;
+  saldoAwalBank: number;
+
+  // Realitas Cek Kas (Rekonsiliasi Fisik & Bank)
+  saldoFisikTunai: number;
+  saldoNyataBank: number;
+  selisihTunai: number; // saldoFisikTunai - saldoAkhirBukuTunai (0 = Sesuai)
+  selisihBank: number;  // saldoNyataBank - saldoAkhirBukuBank (0 = Sesuai)
+  statusRekonsiliasi: 'Sesuai' | 'Selisih' | 'Belum Dicek';
+  catatanRekonsiliasi?: string;
+}
+
 export interface AppState {
   users: User[];
   absensi: Absensi[];
@@ -150,5 +195,7 @@ export interface AppState {
   closings: Closing[];
   kasbon: Kasbon[];
   payroll: Payroll[];
+  cashTransactions: CashTransaction[];
+  monthlyReports: MonthlyClosingReport[];
   currentUserId: string | null; // null represents the Login Page
 }

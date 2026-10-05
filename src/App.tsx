@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Coffee, BarChart3, Layers, Package, UserCheck,
-  CreditCard, FileText, Users, Database, Sparkles, CheckCircle2
+  CreditCard, FileText, Users, Database, Sparkles, CheckCircle2,
+  Landmark
 } from 'lucide-react';
-import { AppState, User, Closing, Menu, Ingredient, Recipe, Kasbon, Payroll, OperationalExpenseMaster } from './types';
+import {
+  AppState, User, Closing, Menu, Ingredient, Recipe,
+  Kasbon, Payroll, OperationalExpenseMaster, CashTransaction, MonthlyClosingReport
+} from './types';
 import {
   loadAppState, saveAppState, resetToDefaultState,
   deductIngredientsForClosing, calculateMenuHpp
@@ -15,6 +19,7 @@ import { GoogleSheetsSyncModal } from './components/GoogleSheetsSyncModal';
 // Views
 import { EmployeeHome } from './components/EmployeeView/EmployeeHome';
 import { OwnerDashboard } from './components/OwnerView/OwnerDashboard';
+import { MonthlyReportAndCashReconciliation } from './components/OwnerView/MonthlyReportAndCashReconciliation';
 import { MenuAndHppManagement } from './components/OwnerView/MenuAndHppManagement';
 import { StockManagement } from './components/OwnerView/StockManagement';
 import { AttendanceRecap } from './components/OwnerView/AttendanceRecap';
@@ -27,7 +32,7 @@ export default function App() {
   const [state, setState] = useState<AppState>(() => loadAppState());
   const [activeView, setActiveView] = useState<'karyawan' | 'owner'>('karyawan');
   const [ownerTab, setOwnerTab] = useState<
-    'dashboard' | 'menus' | 'stock' | 'attendance' | 'kasbon' | 'payroll' | 'users'
+    'dashboard' | 'monthly-report' | 'menus' | 'stock' | 'attendance' | 'kasbon' | 'payroll' | 'users'
   >('dashboard');
   const [isSheetsModalOpen, setIsSheetsModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -87,15 +92,59 @@ export default function App() {
     // Backward inventory deduction based on recipes
     const updatedIngredients = deductIngredientsForClosing(newClosing, state.recipes, state.ingredients);
 
+    // Create cash transactions automatically
+    const newTxList: CashTransaction[] = [
+      {
+        id: `CTX-CLS-${Date.now().toString().slice(-6)}`,
+        tanggal: newClosing.tanggal,
+        kategori: 'Penjualan Laci',
+        tipe: 'Masuk',
+        metode: 'Tunai',
+        nominal: newClosing.totalPenjualan,
+        keterangan: `Penjualan Kasir Lapak (${newClosing.totalCup} cup terjual oleh ${newClosing.userName})`,
+        referensiId: newClosing.id,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+
+    if (newClosing.totalPengeluaran > 0) {
+      newTxList.push({
+        id: `CTX-EXP-${Date.now().toString().slice(-6)}`,
+        tanggal: newClosing.tanggal,
+        kategori: 'Belanja Langsung',
+        tipe: 'Keluar',
+        metode: 'Tunai',
+        nominal: newClosing.totalPengeluaran,
+        keterangan: `Pengeluaran Cash Lapak Harian (${newClosing.pengeluaranCash.map(e => e.nama).join(', ')})`,
+        referensiId: newClosing.id,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    if (newClosing.totalPembayaranHutang > 0) {
+      newTxList.push({
+        id: `CTX-IN-${Date.now().toString().slice(-6)}`,
+        tanggal: newClosing.tanggal,
+        kategori: 'Kas Masuk Lain',
+        tipe: 'Masuk',
+        metode: 'Tunai',
+        nominal: newClosing.totalPembayaranHutang,
+        keterangan: `Pemasukan Kas Lapak Lainnya (${newClosing.pembayaranHutang.map(h => h.sumber).join(', ')})`,
+        referensiId: newClosing.id,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     const nextState: AppState = {
       ...state,
       closings: [newClosing, ...state.closings],
       ingredients: updatedIngredients,
+      cashTransactions: [...newTxList, ...(state.cashTransactions || [])],
     };
 
     setState(nextState);
     saveAppState(nextState);
-    showToast(`Closing lapak berhasil dikirim! Stok bahan baku telah dipotong otomatis & bonus cup aktif bagi seluruh staf yang hadir.`);
+    showToast(`Closing lapak berhasil dikirim! Kas laci & stok bahan baku otomatis terupdate.`);
   };
 
   // Dedicated Employee Check-In Attendance with Daily Activity Report
@@ -219,14 +268,109 @@ export default function App() {
     showToast(`Bahan baku ${ingredient.namaBahan} berhasil ditambahkan.`);
   };
 
-  const handleRestock = (ingredientId: string, additionalStock: number) => {
+  const handleRestock = (
+    ingredientId: string,
+    additionalStock: number,
+    source: 'Marketplace' | 'Langsung' = 'Marketplace',
+    options?: {
+      newUnitPrice?: number;
+      totalCost?: number;
+      priceUpdateMode?: 'moving_average' | 'last_price' | 'keep_old';
+    }
+  ) => {
+    const item = state.ingredients.find(i => i.id === ingredientId);
+    if (!item) return;
+
+    const unitPrice = options?.newUnitPrice !== undefined && options.newUnitPrice > 0
+      ? options.newUnitPrice
+      : item.hargaPerSatuan;
+
+    const realCost = options?.totalCost !== undefined && options.totalCost > 0
+      ? options.totalCost
+      : Math.round(additionalStock * unitPrice);
+
+    const priceMode = options?.priceUpdateMode || 'moving_average';
+
+    // Calculate final unit price for ingredient master
+    let finalUnitPrice = item.hargaPerSatuan;
+    if (priceMode === 'last_price') {
+      finalUnitPrice = Math.round(unitPrice * 100) / 100;
+    } else if (priceMode === 'moving_average') {
+      const oldStock = Math.max(0, item.stokSaatIni);
+      const totalNewStock = oldStock + additionalStock;
+      if (totalNewStock > 0) {
+        finalUnitPrice = Math.round(((oldStock * item.hargaPerSatuan) + realCost) / totalNewStock * 100) / 100;
+      }
+    }
+
     const nextIngredients = state.ingredients.map(i =>
-      i.id === ingredientId ? { ...i, stokSaatIni: i.stokSaatIni + additionalStock } : i
+      i.id === ingredientId
+        ? { ...i, stokSaatIni: i.stokSaatIni + additionalStock, hargaPerSatuan: finalUnitPrice }
+        : i
     );
-    const nextState = { ...state, ingredients: nextIngredients };
+
+    // Automatically recalculate HPP for all menus using this ingredient
+    const nextMenus = state.menus.map(menu => {
+      const usesIngredient = state.recipes.some(r => r.menuId === menu.id && r.ingredientId === ingredientId);
+      if (usesIngredient) {
+        return { ...menu, hpp: calculateMenuHpp(menu.id, state.recipes, nextIngredients) };
+      }
+      return menu;
+    });
+
+    const isMarketplace = source === 'Marketplace';
+
+    // Create cash transaction for stock purchase with the exact real cost paid
+    const newTx: CashTransaction = {
+      id: `CTX-STK-${Date.now().toString().slice(-6)}`,
+      tanggal: new Date().toISOString().slice(0, 10),
+      kategori: isMarketplace ? 'Beli Marketplace' : 'Belanja Langsung',
+      tipe: 'Keluar',
+      metode: isMarketplace ? 'Bank' : 'Tunai',
+      nominal: realCost,
+      keterangan: `Restock ${item.namaBahan} (${additionalStock} ${item.satuan} @ Rp ${unitPrice.toLocaleString('id-ID')}) via ${isMarketplace ? 'Marketplace (Kas Bank)' : 'Belanja Langsung (Kas Tunai)'}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    const nextState = {
+      ...state,
+      ingredients: nextIngredients,
+      menus: nextMenus,
+      cashTransactions: [newTx, ...(state.cashTransactions || [])],
+    };
     setState(nextState);
     saveAppState(nextState);
-    showToast(`Restock berhasil ditambahkan ke inventaris.`);
+    showToast(`Restock ${item.namaBahan} berhasil! Kas ${isMarketplace ? 'Bank' : 'Tunai'} terpotong Rp ${realCost.toLocaleString('id-ID')} & HPP menu disesuaikan.`);
+  };
+
+  // Monthly Report & Cash Reconciliation Handlers
+  const handleSaveMonthlyReport = (report: MonthlyClosingReport) => {
+    const existingIndex = (state.monthlyReports || []).findIndex(r => r.bulanTahun === report.bulanTahun);
+    let updatedReports = [...(state.monthlyReports || [])];
+    if (existingIndex >= 0) {
+      updatedReports[existingIndex] = report;
+    } else {
+      updatedReports.push(report);
+    }
+    const nextState = { ...state, monthlyReports: updatedReports };
+    setState(nextState);
+    saveAppState(nextState);
+    showToast(`Laporan dan rekonsiliasi kas ${report.bulanTahun} (${report.status === 'Closed' ? 'Tutup Buku Selesai' : 'Tersimpan'}) berhasil diperbarui.`);
+  };
+
+  const handleAddCashTransaction = (tx: Omit<CashTransaction, 'id' | 'createdAt'>) => {
+    const newTx: CashTransaction = {
+      ...tx,
+      id: `CTX-${Date.now().toString().slice(-6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    const nextState = {
+      ...state,
+      cashTransactions: [newTx, ...(state.cashTransactions || [])],
+    };
+    setState(nextState);
+    saveAppState(nextState);
+    showToast(`Transaksi kas ${tx.kategori} sebesar Rp ${tx.nominal.toLocaleString('id-ID')} berhasil dicatat.`);
   };
 
   // Kasbon Management
@@ -445,6 +589,18 @@ export default function App() {
               </button>
 
               <button
+                onClick={() => setOwnerTab('monthly-report')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  ownerTab === 'monthly-report'
+                    ? 'bg-emerald-800 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Landmark className="w-4 h-4" />
+                <span>Laporan Bulanan &amp; Kas</span>
+              </button>
+
+              <button
                 onClick={() => setOwnerTab('menus')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                   ownerTab === 'menus'
@@ -525,8 +681,23 @@ export default function App() {
                 ingredients={state.ingredients}
                 recipes={state.recipes}
                 users={state.users}
+                monthlyReports={state.monthlyReports || []}
+                cashTransactions={state.cashTransactions || []}
                 onRestock={handleRestock}
                 onNavigateToStock={() => setOwnerTab('stock')}
+                onNavigateToMonthlyReport={() => setOwnerTab('monthly-report')}
+              />
+            )}
+
+            {ownerTab === 'monthly-report' && (
+              <MonthlyReportAndCashReconciliation
+                closings={state.closings}
+                cashTransactions={state.cashTransactions || []}
+                monthlyReports={state.monthlyReports || []}
+                payroll={state.payroll}
+                users={state.users}
+                onSaveMonthlyReport={handleSaveMonthlyReport}
+                onAddCashTransaction={handleAddCashTransaction}
               />
             )}
 

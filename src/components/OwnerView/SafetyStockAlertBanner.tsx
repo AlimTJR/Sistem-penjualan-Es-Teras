@@ -10,7 +10,16 @@ import { formatNumber, formatRupiah } from '../../utils/formatters';
 
 interface SafetyStockAlertBannerProps {
   ingredients: Ingredient[];
-  onRestock?: (ingredientId: string, additionalStock: number) => void;
+  onRestock?: (
+    ingredientId: string,
+    additionalStock: number,
+    source?: 'Marketplace' | 'Langsung',
+    options?: {
+      newUnitPrice?: number;
+      totalCost?: number;
+      priceUpdateMode?: 'moving_average' | 'last_price' | 'keep_old';
+    }
+  ) => void;
   onNavigateToStock?: () => void;
 }
 
@@ -22,6 +31,10 @@ export const SafetyStockAlertBanner: React.FC<SafetyStockAlertBannerProps> = ({
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedItemForRestock, setSelectedItemForRestock] = useState<Ingredient | null>(null);
   const [restockQty, setRestockQty] = useState<number>(100);
+  const [restockSource, setRestockSource] = useState<'Marketplace' | 'Langsung'>('Marketplace');
+  const [restockUnitPrice, setRestockUnitPrice] = useState<number>(0);
+  const [restockTotalCost, setRestockTotalCost] = useState<number>(0);
+  const [priceUpdateMode, setPriceUpdateMode] = useState<'moving_average' | 'last_price' | 'keep_old'>('moving_average');
 
   // Filter ingredients below or equal to safety stock threshold
   const lowStockItems = ingredients.filter(i => i.stokSaatIni <= i.minStok);
@@ -40,6 +53,15 @@ export const SafetyStockAlertBanner: React.FC<SafetyStockAlertBannerProps> = ({
     const deficit = Math.max(0, item.minStok - item.stokSaatIni);
     const recommended = deficit > 0 ? deficit + item.minStok : item.minStok;
     setRestockQty(recommended);
+    setRestockUnitPrice(item.hargaPerSatuan);
+    setRestockTotalCost(Math.round(recommended * item.hargaPerSatuan));
+    setPriceUpdateMode('moving_average');
+
+    if (item.namaBahan.toLowerCase().includes('susu') || item.namaBahan.toLowerCase().includes('gula')) {
+      setRestockSource('Langsung');
+    } else {
+      setRestockSource('Marketplace');
+    }
   };
 
   const handleConfirmQuickRestock = (e: React.FormEvent) => {
@@ -47,7 +69,11 @@ export const SafetyStockAlertBanner: React.FC<SafetyStockAlertBannerProps> = ({
     if (!selectedItemForRestock || restockQty <= 0) return;
 
     if (onRestock) {
-      onRestock(selectedItemForRestock.id, restockQty);
+      onRestock(selectedItemForRestock.id, restockQty, restockSource, {
+        newUnitPrice: restockUnitPrice,
+        totalCost: restockTotalCost,
+        priceUpdateMode,
+      });
       confetti({
         particleCount: 50,
         spread: 60,
@@ -259,24 +285,47 @@ export const SafetyStockAlertBanner: React.FC<SafetyStockAlertBannerProps> = ({
             </div>
 
             <form onSubmit={handleConfirmQuickRestock} className="p-5 space-y-4">
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Stok Saat Ini:</span>
-                  <span className="font-bold text-red-600">
-                    {formatNumber(selectedItemForRestock.stokSaatIni)} {selectedItemForRestock.satuan}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Batas Safety Stock:</span>
-                  <span className="font-bold text-slate-700">
-                    {formatNumber(selectedItemForRestock.minStok)} {selectedItemForRestock.satuan}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Harga Satuan Bahan:</span>
-                  <span className="font-semibold text-slate-800">
-                    {formatRupiah(selectedItemForRestock.hargaPerSatuan)} / {selectedItemForRestock.satuan}
-                  </span>
+              {/* Pilihan Metode Pembelian Kas */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1.5 text-xs">
+                  Sumber &amp; Metode Pembelian Kas:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRestockSource('Marketplace')}
+                    className={`p-2.5 rounded-2xl border text-left transition cursor-pointer ${
+                      restockSource === 'Marketplace'
+                        ? 'border-blue-500 bg-blue-50/80 ring-1 ring-blue-400'
+                        : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-[11px] text-blue-950">Marketplace Online</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">Bank</span>
+                    </div>
+                    <p className="text-[9px] text-slate-500 mt-0.5">
+                      Shopee / Tokopedia (Kas Bank)
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setRestockSource('Langsung')}
+                    className={`p-2.5 rounded-2xl border text-left transition cursor-pointer ${
+                      restockSource === 'Langsung'
+                        ? 'border-amber-500 bg-amber-50/80 ring-1 ring-amber-400'
+                        : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-[11px] text-amber-950">Belanja Langsung</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Tunai</span>
+                    </div>
+                    <p className="text-[9px] text-slate-500 mt-0.5">
+                      Pasar / Toko Offline (Kas Tunai)
+                    </p>
+                  </button>
                 </div>
               </div>
 
@@ -290,23 +339,90 @@ export const SafetyStockAlertBanner: React.FC<SafetyStockAlertBannerProps> = ({
                     min="1"
                     required
                     value={restockQty}
-                    onChange={e => setRestockQty(Math.max(1, Number(e.target.value) || 0))}
+                    onChange={e => {
+                      const qty = Math.max(1, Number(e.target.value) || 0);
+                      setRestockQty(qty);
+                      setRestockTotalCost(Math.round(qty * restockUnitPrice));
+                    }}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-extrabold text-slate-900 focus:bg-white focus:outline-emerald-600"
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">
                     {selectedItemForRestock.satuan}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-400 mt-1 block">
-                  Estimasi stok baru: <strong>{formatNumber(selectedItemForRestock.stokSaatIni + restockQty)} {selectedItemForRestock.satuan}</strong> (Status: Aman)
-                </span>
               </div>
 
-              {/* Estimated purchase cost */}
+              {/* Dynamic Price Adjustment for Fluctuation */}
+              <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                    Harga Beli Satuan Baru:
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={restockUnitPrice}
+                    onChange={e => {
+                      const p = Math.max(0, Number(e.target.value) || 0);
+                      setRestockUnitPrice(p);
+                      setRestockTotalCost(Math.round(restockQty * p));
+                    }}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-emerald-600"
+                  />
+                  <span className="text-[9px] text-slate-400 mt-0.5 block">
+                    Master lama: {formatRupiah(selectedItemForRestock.hargaPerSatuan)}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                    Total Nota Pembelian:
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={restockTotalCost}
+                    onChange={e => {
+                      const tot = Math.max(0, Number(e.target.value) || 0);
+                      setRestockTotalCost(tot);
+                      if (restockQty > 0) {
+                        setRestockUnitPrice(Math.round((tot / restockQty) * 100) / 100);
+                      }
+                    }}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-black text-emerald-950 focus:outline-emerald-600"
+                  />
+                  <span className="text-[9px] text-slate-400 mt-0.5 block">
+                    Dipotong dari {restockSource === 'Marketplace' ? 'Kas Bank' : 'Kas Tunai'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Fluctuation Info */}
+              {restockUnitPrice !== selectedItemForRestock.hargaPerSatuan && (
+                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-950">
+                  <span className="font-bold block">
+                    Fluktuasi Terdeteksi: {restockUnitPrice > selectedItemForRestock.hargaPerSatuan ? '▲ Harga Naik' : '▼ Harga Turun'}
+                  </span>
+                  <span className="text-[10px] text-amber-800">
+                    Sistem otomatis menghitung harga rata-rata tertimbang (*Moving Average*) agar HPP menu tetap adil dan akurat.
+                  </span>
+                </div>
+              )}
+
+              {/* Estimated purchase cost summary */}
               <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
-                <span className="text-emerald-800 font-medium">Estimasi Biaya Pembelian:</span>
+                <div>
+                  <span className="text-emerald-800 font-medium block">Total Kas Dipotong:</span>
+                  <span className="text-[10px] text-emerald-600">
+                    Metode: {restockSource === 'Marketplace' ? 'Kas Bank (BCA)' : 'Kas Tunai Laci'}
+                  </span>
+                </div>
                 <span className="font-black text-emerald-900 text-sm">
-                  {formatRupiah(restockQty * selectedItemForRestock.hargaPerSatuan)}
+                  {formatRupiah(restockTotalCost)}
                 </span>
               </div>
 
