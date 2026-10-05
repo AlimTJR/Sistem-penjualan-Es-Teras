@@ -276,6 +276,8 @@ export default function App() {
       newUnitPrice?: number;
       totalCost?: number;
       priceUpdateMode?: 'moving_average' | 'last_price' | 'keep_old';
+      newIsiPerPack?: number;
+      newHargaPerPack?: number;
     }
   ) => {
     const item = state.ingredients.find(i => i.id === ingredientId);
@@ -305,7 +307,15 @@ export default function App() {
 
     const nextIngredients = state.ingredients.map(i =>
       i.id === ingredientId
-        ? { ...i, stokSaatIni: i.stokSaatIni + additionalStock, hargaPerSatuan: finalUnitPrice }
+        ? {
+            ...i,
+            stokSaatIni: i.stokSaatIni + additionalStock,
+            hargaPerSatuan: finalUnitPrice,
+            isiPerPack: options?.newIsiPerPack !== undefined && options.newIsiPerPack > 0 ? options.newIsiPerPack : i.isiPerPack,
+            hargaPerPack: options?.newHargaPerPack !== undefined && options.newHargaPerPack > 0
+              ? options.newHargaPerPack
+              : (options?.newIsiPerPack ? Math.round(finalUnitPrice * options.newIsiPerPack) : (i.isiPerPack ? Math.round(finalUnitPrice * i.isiPerPack) : i.hargaPerPack)),
+          }
         : i
     );
 

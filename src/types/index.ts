@@ -47,10 +47,13 @@ export interface Menu {
 export interface Ingredient {
   id: string;
   namaBahan: string;
-  satuan: 'gram' | 'ml' | 'pcs' | 'bal' | 'kg' | 'lembar';
+  satuan: 'gram' | 'ml' | 'pcs' | 'bal' | 'kg' | 'lembar'; // Satuan racik pemakaian (gram, ml, pcs)
+  satuanKemasan?: string; // Satuan kemasan beli (pack, dus, karung, slop, botol, jerigen)
+  isiPerPack?: number; // Isi/Netto per kemasan dalam satuan racik (misal 1000 gram, 50 pcs)
+  hargaPerPack?: number; // Harga beli per kemasan (misal Rp 70.000 per pack)
   stokSaatIni: number;
   minStok: number;
-  hargaPerSatuan: number; // Rupiah per unit
+  hargaPerSatuan: number; // Otomatis: hargaPerPack / isiPerPack (Rupiah per gram / ml / pcs)
 }
 
 export interface Recipe {

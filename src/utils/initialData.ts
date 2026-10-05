@@ -69,18 +69,18 @@ export const initialUsers: User[] = [
 ];
 
 export const initialIngredients: Ingredient[] = [
-  { id: 'ING-01', namaBahan: 'Daun Teh Racik Teras', satuan: 'gram', stokSaatIni: 14500, minStok: 5000, hargaPerSatuan: 70 }, // Rp 70/gram
-  { id: 'ING-02', namaBahan: 'Biji Kopi House Blend', satuan: 'gram', stokSaatIni: 8200, minStok: 3000, hargaPerSatuan: 140 }, // Rp 140/gram
-  { id: 'ING-03', namaBahan: 'Susu UHT Segar', satuan: 'ml', stokSaatIni: 45000, minStok: 15000, hargaPerSatuan: 18 }, // Rp 18/ml
-  { id: 'ING-04', namaBahan: 'Gula Aren Cair Asli', satuan: 'ml', stokSaatIni: 18500, minStok: 6000, hargaPerSatuan: 45 }, // Rp 45/ml
-  { id: 'ING-05', namaBahan: 'Sirup Buah (Lemon/Lychee/Berry)', satuan: 'ml', stokSaatIni: 12000, minStok: 4000, hargaPerSatuan: 55 },
-  { id: 'ING-06', namaBahan: 'Yakult Original', satuan: 'pcs', stokSaatIni: 45, minStok: 100, hargaPerSatuan: 2200 }, // Kritis (45/100 btl)
-  { id: 'ING-07', namaBahan: 'Cup Plastik 16oz Custom Sablon', satuan: 'pcs', stokSaatIni: 2850, minStok: 1000, hargaPerSatuan: 420 },
-  { id: 'ING-08', namaBahan: 'Cup Plastik 22oz Custom Sablon', satuan: 'pcs', stokSaatIni: 650, minStok: 800, hargaPerSatuan: 550 }, // Waspada (650/800 pcs)
-  { id: 'ING-09', namaBahan: 'Lid Sealer Roll Logo Kedai', satuan: 'lembar', stokSaatIni: 4800, minStok: 1500, hargaPerSatuan: 65 },
-  { id: 'ING-10', namaBahan: 'Sedotan Steril Lancip', satuan: 'pcs', stokSaatIni: 5200, minStok: 1500, hargaPerSatuan: 50 },
-  { id: 'ING-11', namaBahan: 'Gula Pasir Kristal', satuan: 'gram', stokSaatIni: 22000, minStok: 8000, hargaPerSatuan: 17 },
-  { id: 'ING-12', namaBahan: 'Susu Kental Manis', satuan: 'gram', stokSaatIni: 6500, minStok: 2500, hargaPerSatuan: 30 },
+  { id: 'ING-01', namaBahan: 'Daun Teh Racik Teras', satuan: 'gram', satuanKemasan: 'pack', isiPerPack: 1000, hargaPerPack: 70000, stokSaatIni: 14500, minStok: 5000, hargaPerSatuan: 70 }, // Rp 70.000 / 1.000g = Rp 70/g
+  { id: 'ING-02', namaBahan: 'Biji Kopi House Blend', satuan: 'gram', satuanKemasan: 'pack', isiPerPack: 1000, hargaPerPack: 140000, stokSaatIni: 8200, minStok: 3000, hargaPerSatuan: 140 }, // Rp 140.000 / 1.000g = Rp 140/g
+  { id: 'ING-03', namaBahan: 'Susu UHT Segar', satuan: 'ml', satuanKemasan: 'dus (1 Liter)', isiPerPack: 1000, hargaPerPack: 18000, stokSaatIni: 45000, minStok: 15000, hargaPerSatuan: 18 }, // Rp 18.000 / 1.000ml = Rp 18/ml
+  { id: 'ING-04', namaBahan: 'Gula Aren Cair Asli', satuan: 'ml', satuanKemasan: 'jerigen (5L)', isiPerPack: 5000, hargaPerPack: 225000, stokSaatIni: 18500, minStok: 6000, hargaPerSatuan: 45 }, // Rp 225.000 / 5.000ml = Rp 45/ml
+  { id: 'ING-05', namaBahan: 'Sirup Buah (Lemon/Lychee/Berry)', satuan: 'ml', satuanKemasan: 'botol (2L)', isiPerPack: 2000, hargaPerPack: 110000, stokSaatIni: 12000, minStok: 4000, hargaPerSatuan: 55 }, // Rp 110.000 / 2.000ml = Rp 55/ml
+  { id: 'ING-06', namaBahan: 'Yakult Original', satuan: 'pcs', satuanKemasan: 'pack (5 btl)', isiPerPack: 5, hargaPerPack: 11000, stokSaatIni: 45, minStok: 100, hargaPerSatuan: 2200 }, // Rp 11.000 / 5 btl = Rp 2.200/btl (Kritis: 45 btl)
+  { id: 'ING-07', namaBahan: 'Cup Plastik 16oz Custom Sablon', satuan: 'pcs', satuanKemasan: 'slop (50 pcs)', isiPerPack: 50, hargaPerPack: 21000, stokSaatIni: 2850, minStok: 1000, hargaPerSatuan: 420 }, // Rp 21.000 / 50 pcs = Rp 420/pcs
+  { id: 'ING-08', namaBahan: 'Cup Plastik 22oz Custom Sablon', satuan: 'pcs', satuanKemasan: 'slop (50 pcs)', isiPerPack: 50, hargaPerPack: 27500, stokSaatIni: 650, minStok: 800, hargaPerSatuan: 550 }, // Rp 27.500 / 50 pcs = Rp 550/pcs (Waspada: 650 pcs)
+  { id: 'ING-09', namaBahan: 'Lid Sealer Roll Logo Kedai', satuan: 'lembar', satuanKemasan: 'roll (1.200 lembar)', isiPerPack: 1200, hargaPerPack: 78000, stokSaatIni: 4800, minStok: 1500, hargaPerSatuan: 65 }, // Rp 78.000 / 1.200 lembar = Rp 65/lembar
+  { id: 'ING-10', namaBahan: 'Sedotan Steril Lancip', satuan: 'pcs', satuanKemasan: 'pack (100 pcs)', isiPerPack: 100, hargaPerPack: 5000, stokSaatIni: 5200, minStok: 1500, hargaPerSatuan: 50 }, // Rp 5.000 / 100 pcs = Rp 50/pcs
+  { id: 'ING-11', namaBahan: 'Gula Pasir Kristal', satuan: 'gram', satuanKemasan: 'kantong (1 kg)', isiPerPack: 1000, hargaPerPack: 17500, stokSaatIni: 22000, minStok: 8000, hargaPerSatuan: 17.5 }, // Rp 17.500 / kantong 1.000g = Rp 17.5/g
+  { id: 'ING-12', namaBahan: 'Susu Kental Manis', satuan: 'gram', satuanKemasan: 'kaleng (500g)', isiPerPack: 500, hargaPerPack: 15000, stokSaatIni: 6500, minStok: 2500, hargaPerSatuan: 30 }, // Rp 15.000 / 500g = Rp 30/g
 ];
 
 export const initialMenus: Menu[] = [
