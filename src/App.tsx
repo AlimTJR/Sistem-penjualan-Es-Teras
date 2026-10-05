@@ -10,7 +10,7 @@ import {
 } from './types';
 import {
   loadAppState, saveAppState, resetToDefaultState,
-  deductIngredientsForClosing, calculateMenuHpp
+  deductIngredientsForClosing, calculateMenuHpp, addRecentUserId
 } from './utils/storage';
 import { Navbar } from './components/Navbar';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -59,6 +59,7 @@ export default function App() {
   };
 
   const handleLoginSuccess = (user: User) => {
+    addRecentUserId(user.id);
     const nextState = { ...state, currentUserId: user.id };
     setState(nextState);
     saveAppState(nextState);

@@ -26,6 +26,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [formData, setFormData] = useState<Omit<User, 'id'>>({
     nama: '',
     username: '',
+    password: '123',
     role: 'karyawan',
     tarifHarian: 50000,
     gajiPokok: 1250000,
@@ -40,6 +41,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setFormData({
       nama: '',
       username: '',
+      password: '123',
       role: 'karyawan',
       tarifHarian: 50000,
       gajiPokok: 1250000,
@@ -56,6 +58,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setFormData({
       nama: user.nama,
       username: user.username,
+      password: user.password || '123',
       role: user.role,
       tarifHarian: user.tarifHarian || 50000,
       gajiPokok: user.gajiPokok || 1250000,
@@ -264,6 +267,21 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   />
                 </div>
 
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Kata Sandi Akun:</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Default: 123"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-emerald-600 font-mono"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Default: 123</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-700 font-semibold mb-1">Role / Peran:</label>
                   <select

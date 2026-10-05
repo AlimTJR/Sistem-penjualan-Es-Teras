@@ -8,6 +8,42 @@ import {
 } from './initialData';
 
 const STORAGE_KEY = 'kedai_teras_db_v1.1';
+const RECENT_USERS_KEY = 'kedai_teras_recent_users_v1';
+
+export function getRecentUserIds(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_USERS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(item => typeof item === 'string');
+      }
+    }
+  } catch (err) {
+    console.error('Failed to get recent user ids', err);
+  }
+  return [];
+}
+
+export function addRecentUserId(userId: string): void {
+  try {
+    const current = getRecentUserIds().filter(id => id !== userId);
+    // Put most recent first, max 6
+    const updated = [userId, ...current].slice(0, 6);
+    localStorage.setItem(RECENT_USERS_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to save recent user id', err);
+  }
+}
+
+export function removeRecentUserId(userId: string): void {
+  try {
+    const current = getRecentUserIds().filter(id => id !== userId);
+    localStorage.setItem(RECENT_USERS_KEY, JSON.stringify(current));
+  } catch (err) {
+    console.error('Failed to remove recent user id', err);
+  }
+}
 
 export function loadAppState(): AppState {
   try {
