@@ -4,7 +4,7 @@ import {
   AlertTriangle, ArrowUpRight, ArrowDownRight, RefreshCw,
   FileSpreadsheet, Printer, Lock, Unlock, ArrowRightLeft,
   Search, Filter, ChevronDown, Sparkles, Building, ShoppingCart,
-  Store, Check, X, Info
+  Store, Check, X, Info, Zap, Droplets, Wifi, Home, Receipt, Plus
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -59,6 +59,16 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
   // Modals state
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showReconcileModal, setShowReconcileModal] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+
+  // Non-material operational expense modal state
+  const [expenseForm, setExpenseForm] = useState({
+    tanggal: `${selectedMonth}-05`,
+    subKategori: 'Token Listrik (PLN)',
+    nominal: 50000,
+    metode: 'Bank' as PaymentChannel,
+    keterangan: '',
+  });
 
   // Deposit Form State (Setor Tunai ke Bank)
   const [depositForm, setDepositForm] = useState({
@@ -123,7 +133,11 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
     let depositToBank = 0;
     let marketplaceBank = 0;
     let belanjaLangsungTunai = 0;
+    let operasionalUtilitasTunai = 0;
+    let operasionalUtilitasBank = 0;
     let gajiKaryawan = 0;
+    let kasMasukLainBank = 0;
+    let kasMasukLainTunai = 0;
 
     monthTransactions.forEach(t => {
       if (t.kategori === 'Setor Bank') {
@@ -132,8 +146,26 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
         marketplaceBank += t.nominal;
       } else if (t.kategori === 'Belanja Langsung' && t.metode === 'Tunai') {
         belanjaLangsungTunai += t.nominal;
+      } else if (t.kategori === 'Operasional & Utilitas') {
+        if (t.metode === 'Tunai') {
+          operasionalUtilitasTunai += t.nominal;
+        } else {
+          operasionalUtilitasBank += t.nominal;
+        }
       } else if (t.kategori === 'Gaji Karyawan') {
         gajiKaryawan += t.nominal;
+      } else if (t.tipe === 'Masuk' && t.kategori !== 'Saldo Awal') {
+        if (t.metode === 'Bank') {
+          kasMasukLainBank += t.nominal;
+        } else {
+          kasMasukLainTunai += t.nominal;
+        }
+      } else if (t.tipe === 'Keluar') {
+        if (t.metode === 'Tunai') {
+          operasionalUtilitasTunai += t.nominal;
+        } else {
+          operasionalUtilitasBank += t.nominal;
+        }
       }
     });
 
@@ -141,7 +173,12 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
       depositToBank,
       marketplaceBank,
       belanjaLangsungTunai,
+      operasionalUtilitasTunai,
+      operasionalUtilitasBank,
+      totalOperasionalUtilitas: operasionalUtilitasTunai + operasionalUtilitasBank,
       gajiKaryawan,
+      kasMasukLainBank,
+      kasMasukLainTunai,
     };
   }, [monthTransactions]);
 
@@ -157,14 +194,14 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
   }, [monthClosings]);
 
   // 6. Running Book Balances (Saldo Akhir Buku Sistem)
-  // Kas Tunai: Saldo Awal + Omzet + Kas In - Pengeluaran Lapak Cash - Belanja Langsung Offline - Setor ke Bank
-  const totalPemasukanTunaiBuku = totalOmzetLapak + totalKasMasukLain;
-  const totalPengeluaranTunaiBuku = totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai + extraTransactions.depositToBank;
+  // Kas Tunai: Saldo Awal + Omzet + Kas In Lapak + Kas Masuk Lain Tunai - Pengeluaran Lapak Cash - Belanja Langsung Offline - Beban Utilitas Tunai - Setor ke Bank
+  const totalPemasukanTunaiBuku = totalOmzetLapak + totalKasMasukLain + extraTransactions.kasMasukLainTunai;
+  const totalPengeluaranTunaiBuku = totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai + extraTransactions.operasionalUtilitasTunai + extraTransactions.depositToBank;
   const saldoAkhirBukuTunai = currentReport.saldoAwalTunai + totalPemasukanTunaiBuku - totalPengeluaranTunaiBuku;
 
-  // Kas Bank: Saldo Awal + Setoran Tunai dari Lapak - Pembelian Marketplace - Gaji Karyawan
-  const totalPemasukanBankBuku = extraTransactions.depositToBank;
-  const totalPengeluaranBankBuku = extraTransactions.marketplaceBank + extraTransactions.gajiKaryawan;
+  // Kas Bank: Saldo Awal + Setoran Tunai dari Lapak + Kas Masuk Lain Bank - Pembelian Marketplace - Beban Utilitas Bank - Gaji Karyawan
+  const totalPemasukanBankBuku = extraTransactions.depositToBank + extraTransactions.kasMasukLainBank;
+  const totalPengeluaranBankBuku = extraTransactions.marketplaceBank + extraTransactions.operasionalUtilitasBank + extraTransactions.gajiKaryawan;
   const saldoAkhirBukuBank = currentReport.saldoAwalBank + totalPemasukanBankBuku - totalPengeluaranBankBuku;
 
   // Total Kas Bersih Buku
@@ -207,6 +244,29 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
     });
 
     setShowDepositModal(false);
+  };
+
+  // Handle Submit Pengeluaran Utilitas & Operasional (Listrik, Air, WiFi, dll.)
+  const handleConfirmExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (expenseForm.nominal <= 0) return;
+
+    onAddCashTransaction({
+      tanggal: expenseForm.tanggal,
+      kategori: 'Operasional & Utilitas',
+      tipe: 'Keluar',
+      metode: expenseForm.metode,
+      nominal: expenseForm.nominal,
+      keterangan: `${expenseForm.subKategori}: ${expenseForm.keterangan ? expenseForm.keterangan : 'Beban Operasional Non-Bahan Lapak'}`,
+    });
+
+    confetti({
+      particleCount: 40,
+      spread: 60,
+      origin: { y: 0.6 },
+    });
+
+    setShowExpenseModal(false);
   };
 
   // Handle Save Reconciliation & Tutup Buku
@@ -343,6 +403,22 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
             </select>
           </div>
 
+          {/* Catat Beban Operasional / Utilitas Non-Bahan Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setExpenseForm(prev => ({
+                ...prev,
+                tanggal: `${selectedMonth}-05`,
+              }));
+              setShowExpenseModal(true);
+            }}
+            className="px-3.5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+          >
+            <Zap className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
+            <span>+ Catat Listrik/Air/Utilitas</span>
+          </button>
+
           {/* Setor Tunai Button */}
           <button
             type="button"
@@ -425,6 +501,10 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
               <div className="flex justify-between text-slate-500">
                 <span>Beban Langsung Lapak (Out):</span>
                 <span className="font-bold text-red-500">-{formatRupiah(totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai)}</span>
+              </div>
+              <div className="flex justify-between text-slate-500">
+                <span>Utilitas Non-Bahan (Tunai):</span>
+                <span className="font-bold text-amber-700">-{formatRupiah(extraTransactions.operasionalUtilitasTunai)}</span>
               </div>
               <div className="flex justify-between text-slate-500">
                 <span>Disetor ke Bank (Transfer):</span>
@@ -528,6 +608,10 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
                 <span className="font-bold text-red-500">-{formatRupiah(extraTransactions.marketplaceBank)}</span>
               </div>
               <div className="flex justify-between text-slate-500">
+                <span>Utilitas Non-Bahan (Bank):</span>
+                <span className="font-bold text-amber-700">-{formatRupiah(extraTransactions.operasionalUtilitasBank)}</span>
+              </div>
+              <div className="flex justify-between text-slate-500">
                 <span>Transfer Gaji Karyawan (Out):</span>
                 <span className="font-bold text-red-500">-{formatRupiah(extraTransactions.gajiKaryawan)}</span>
               </div>
@@ -621,13 +705,21 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
                 <span className="font-bold text-amber-300">-{formatRupiah(totalHpp)}</span>
               </div>
               <div className="flex justify-between text-emerald-200">
-                <span>Biaya Operasional &amp; Gaji:</span>
-                <span className="font-bold text-red-300">-{formatRupiah(totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai + extraTransactions.gajiKaryawan)}</span>
+                <span>Belanja Bahan Lapak &amp; Online:</span>
+                <span className="font-bold text-red-300">-{formatRupiah(totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai + extraTransactions.marketplaceBank)}</span>
+              </div>
+              <div className="flex justify-between text-emerald-200">
+                <span>Beban Utilitas &amp; Non-Bahan:</span>
+                <span className="font-bold text-amber-300">-{formatRupiah(extraTransactions.totalOperasionalUtilitas)}</span>
+              </div>
+              <div className="flex justify-between text-emerald-200">
+                <span>Gaji &amp; Bonus Karyawan:</span>
+                <span className="font-bold text-red-300">-{formatRupiah(extraTransactions.gajiKaryawan)}</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-emerald-800 font-extrabold text-sm text-white">
                 <span>Laba Operasional Bersih:</span>
                 <span className="text-emerald-400">
-                  {formatRupiah(totalOmzetLapak - totalHpp - (totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai + extraTransactions.gajiKaryawan))}
+                  {formatRupiah(totalOmzetLapak - totalHpp - (totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai + extraTransactions.marketplaceBank + extraTransactions.totalOperasionalUtilitas + extraTransactions.gajiKaryawan))}
                 </span>
               </div>
             </div>
@@ -710,6 +802,13 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
               <span className="text-slate-600">Beli Bahan Marketplace (Kas Bank):</span>
               <span className="font-bold text-slate-800">{formatRupiah(extraTransactions.marketplaceBank)}</span>
             </div>
+            <div className="flex justify-between bg-amber-50/80 p-1.5 rounded-xl border border-amber-200/70 -mx-1 text-amber-950">
+              <span className="flex items-center gap-1 font-bold text-xs">
+                <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                Utilitas Non-Bahan (Listrik, Air, WiFi, dll.):
+              </span>
+              <span className="font-black text-amber-900">{formatRupiah(extraTransactions.totalOperasionalUtilitas)}</span>
+            </div>
             <div className="flex justify-between">
               <span className="text-slate-600">Beban Gaji &amp; Bonus Karyawan:</span>
               <span className="font-bold text-slate-800">{formatRupiah(extraTransactions.gajiKaryawan)}</span>
@@ -717,7 +816,7 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
             <div className="flex justify-between pt-2 border-t border-slate-200 font-extrabold text-sm text-slate-900">
               <span>Total Beban Operasional:</span>
               <span className="text-red-700">
-                {formatRupiah(totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai + extraTransactions.marketplaceBank + extraTransactions.gajiKaryawan)}
+                {formatRupiah(totalPengeluaranLapakCash + extraTransactions.belanjaLangsungTunai + extraTransactions.marketplaceBank + extraTransactions.totalOperasionalUtilitas + extraTransactions.gajiKaryawan)}
               </span>
             </div>
           </div>
@@ -1116,6 +1215,196 @@ export const MonthlyReportAndCashReconciliation: React.FC<MonthlyReportAndCashRe
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 3: Catat Pengeluaran Utilitas & Non-Bahan Baku */}
+      {showExpenseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-xs">
+            {/* Modal Header */}
+            <div className="bg-amber-900 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500 text-slate-950 font-black">
+                  <Zap className="w-5 h-5 fill-slate-950" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">Catat Beban Utilitas &amp; Non-Bahan</h3>
+                  <p className="text-[11px] text-amber-200">
+                    Pengeluaran di luar bahan baku (Token Listrik, Air PDAM, WiFi, Retribusi, dsb.)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExpenseModal(false)}
+                className="text-amber-200 hover:text-white text-base font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmExpense} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+              {/* Category Quick Chips */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1.5">
+                  Pilih Kategori Beban Non-Bahan:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2">
+                  {[
+                    { label: 'Token Listrik (PLN)', icon: '⚡' },
+                    { label: 'Tagihan Air PDAM', icon: '💧' },
+                    { label: 'Tagihan WiFi / Internet', icon: '📶' },
+                    { label: 'Retribusi & Kebersihan', icon: '🧹' },
+                    { label: 'Sewa Lahan / Lapak', icon: '🏪' },
+                    { label: 'Servis & Perawatan Mesin', icon: '🔧' },
+                    { label: 'Perlengkapan Lapak', icon: '📦' },
+                    { label: 'Lainnya (Non-Bahan)', icon: '📝' },
+                  ].map(cat => {
+                    const isSelected = expenseForm.subKategori === cat.label;
+                    return (
+                      <button
+                        key={cat.label}
+                        type="button"
+                        onClick={() => setExpenseForm(prev => ({ ...prev, subKategori: cat.label }))}
+                        className={`p-2 rounded-xl border text-left text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-100 border-amber-400 text-amber-950 shadow-xs'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>{cat.icon}</span>
+                        <span className="truncate">{cat.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <input
+                  type="text"
+                  value={expenseForm.subKategori}
+                  onChange={e => setExpenseForm(prev => ({ ...prev, subKategori: e.target.value }))}
+                  placeholder="Ketik nama subkategori jika ingin kustom..."
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-emerald-600"
+                />
+              </div>
+
+              {/* Tanggal & Akun Kas Pembayaran */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Tanggal Transaksi:
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={expenseForm.tanggal}
+                    onChange={e => setExpenseForm(prev => ({ ...prev, tanggal: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Metode / Akun Pembayaran:
+                  </label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setExpenseForm(prev => ({ ...prev, metode: 'Tunai' }))}
+                      className={`py-2 px-2.5 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        expenseForm.metode === 'Tunai'
+                          ? 'bg-amber-100 border-amber-400 text-amber-950 ring-1 ring-amber-400'
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Wallet className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Kas Tunai</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setExpenseForm(prev => ({ ...prev, metode: 'Bank' }))}
+                      className={`py-2 px-2.5 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        expenseForm.metode === 'Bank'
+                          ? 'bg-blue-100 border-blue-400 text-blue-950 ring-1 ring-blue-400'
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Landmark className="w-3.5 h-3.5 text-blue-700" />
+                      <span>Kas Bank</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Nominal & Quick Chips */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Nominal Pembayaran (Rp):
+                </label>
+                <div className="relative mb-2">
+                  <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold">Rp</span>
+                  <input
+                    type="number"
+                    min="1000"
+                    step="1000"
+                    required
+                    value={expenseForm.nominal}
+                    onChange={e => setExpenseForm(prev => ({ ...prev, nominal: Number(e.target.value) || 0 }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3 py-2 text-sm font-black text-slate-900 focus:outline-emerald-600"
+                  />
+                </div>
+
+                {/* Preset Chips */}
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-[10px] text-slate-400 py-0.5 font-semibold">Pilih Cepat:</span>
+                  {[20000, 50000, 75000, 100000, 150000, 200000, 250000, 500000].map(val => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setExpenseForm(prev => ({ ...prev, nominal: val }))}
+                      className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 font-bold border border-slate-200 transition cursor-pointer"
+                    >
+                      {formatRupiah(val)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Catatan / Keterangan */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Keterangan / Nomor Bukti / Catatan Tambahan:
+                </label>
+                <input
+                  type="text"
+                  value={expenseForm.keterangan}
+                  onChange={e => setExpenseForm(prev => ({ ...prev, keterangan: e.target.value }))}
+                  placeholder="e.g. Pembelian token listrik no meter 14234..., paket WiFi Indihome Okt 2026, iuran keamanan RT"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-emerald-600"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowExpenseModal(false)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-semibold"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Check className="w-4 h-4 text-slate-950" />
+                  <span>Simpan Beban Utilitas</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
   Coffee, Shield, User as UserIcon, ChevronDown,
-  LogOut, Database, RefreshCw, Clock, CheckCircle2
+  LogOut, Database, RefreshCw, Clock, CheckCircle2,
+  Cloud
 } from 'lucide-react';
 import { User } from '../types';
 import { PWAInstallButton } from './PWAInstallButton';
@@ -13,6 +14,7 @@ interface NavbarProps {
   onSelectUser: (user: User) => void;
   onLogout: () => void;
   onOpenSheetsModal: () => void;
+  isCloudConnected?: boolean;
   activeView: 'karyawan' | 'owner';
   setActiveView: (view: 'karyawan' | 'owner') => void;
 }
@@ -23,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectUser,
   onLogout,
   onOpenSheetsModal,
+  isCloudConnected = true,
   activeView,
   setActiveView,
 }) => {
@@ -64,6 +67,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2 sm:gap-3">
           {/* PWA Install Button */}
           <PWAInstallButton />
+
+          {/* Firebase Cloud Live Status */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/70 border border-emerald-700/60 text-[11px] text-emerald-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <Cloud className="w-3 h-3 text-emerald-300" />
+            <span className="font-semibold">Firebase Live</span>
+          </div>
 
           {/* Google Sheets DB button */}
           <button

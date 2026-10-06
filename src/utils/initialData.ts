@@ -200,8 +200,12 @@ export const initialExpenseMaster: OperationalExpenseMaster[] = [
   { id: 'EXP-M-01', nama: 'Es Batu Kristal Higienis', satuan: 'sak', hargaSatuan: 15000 },
   { id: 'EXP-M-02', nama: 'Air Galon Mineral', satuan: 'galon', hargaSatuan: 20000 },
   { id: 'EXP-M-03', nama: 'Cup Rusak / Gagal Sealer', satuan: 'pcs', hargaSatuan: 500 }, // Preset cup rusak
-  { id: 'EXP-M-04', nama: 'Sabun Cuci & Spons Lapak', satuan: 'paket', hargaSatuan: 12000 },
-  { id: 'EXP-M-05', nama: 'Gas Portabel / Korek Lapak', satuan: 'kaleng', hargaSatuan: 22000 },
+  { id: 'EXP-M-04', nama: 'Token Listrik Lapak (PLN)', satuan: 'voucher', hargaSatuan: 50000 },
+  { id: 'EXP-M-05', nama: 'Tagihan Air Bersih / PDAM', satuan: 'bulan', hargaSatuan: 75000 },
+  { id: 'EXP-M-06', nama: 'Tagihan Internet WiFi Lapak', satuan: 'bulan', hargaSatuan: 250000 },
+  { id: 'EXP-M-07', nama: 'Retribusi Kebersihan & Keamanan Lapak', satuan: 'hari', hargaSatuan: 5000 },
+  { id: 'EXP-M-08', nama: 'Sabun Cuci & Spons Lapak', satuan: 'paket', hargaSatuan: 12000 },
+  { id: 'EXP-M-09', nama: 'Gas Portabel / Korek Lapak', satuan: 'kaleng', hargaSatuan: 22000 },
 ];
 
 export const initialRecipes: Recipe[] = [
@@ -556,6 +560,26 @@ export const initialCashTransactions: CashTransaction[] = [
     createdAt: '2026-09-20T10:15:00Z',
   },
   {
+    id: 'CTX-202609-UT-01',
+    tanggal: '2026-09-21',
+    kategori: 'Operasional & Utilitas',
+    tipe: 'Keluar',
+    metode: 'Tunai',
+    nominal: 100000,
+    keterangan: 'Token Listrik Lapak (PLN): Pembelian token listrik laci kasir',
+    createdAt: '2026-09-21T11:00:00Z',
+  },
+  {
+    id: 'CTX-202609-UT-02',
+    tanggal: '2026-09-22',
+    kategori: 'Operasional & Utilitas',
+    tipe: 'Keluar',
+    metode: 'Bank',
+    nominal: 250000,
+    keterangan: 'Tagihan Internet & WiFi Lapak: Pembayaran paket internet bulanan (BCA)',
+    createdAt: '2026-09-22T14:30:00Z',
+  },
+  {
     id: 'CTX-202609-07',
     tanggal: '2026-09-25',
     kategori: 'Setor Bank',
@@ -598,7 +622,7 @@ export const initialCashTransactions: CashTransaction[] = [
     createdAt: '2026-10-01T08:00:00Z',
   },
   {
-    id: 'CTX-202610-02',
+    id: 'CTX-202610-04',
     tanggal: '2026-10-02',
     kategori: 'Beli Marketplace',
     tipe: 'Keluar',
@@ -608,7 +632,17 @@ export const initialCashTransactions: CashTransaction[] = [
     createdAt: '2026-10-02T13:10:00Z',
   },
   {
-    id: 'CTX-202610-03',
+    id: 'CTX-202610-UT-01',
+    tanggal: '2026-10-02',
+    kategori: 'Operasional & Utilitas',
+    tipe: 'Keluar',
+    metode: 'Tunai',
+    nominal: 100000,
+    keterangan: 'Token Listrik Lapak (PLN): Beli voucher token 100rb di kasir',
+    createdAt: '2026-10-02T15:00:00Z',
+  },
+  {
+    id: 'CTX-202610-05',
     tanggal: '2026-10-03',
     kategori: 'Belanja Langsung',
     tipe: 'Keluar',
@@ -616,6 +650,26 @@ export const initialCashTransactions: CashTransaction[] = [
     nominal: 280000,
     keterangan: 'Belanja Langsung Galon Air & Gula Pasir di Agen Offline (Tunai)',
     createdAt: '2026-10-03T16:00:00Z',
+  },
+  {
+    id: 'CTX-202610-UT-02',
+    tanggal: '2026-10-04',
+    kategori: 'Operasional & Utilitas',
+    tipe: 'Keluar',
+    metode: 'Bank',
+    nominal: 250000,
+    keterangan: 'Tagihan Internet & WiFi Lapak: Tagihan Indihome lapak Oktober (BCA)',
+    createdAt: '2026-10-04T10:00:00Z',
+  },
+  {
+    id: 'CTX-202610-UT-03',
+    tanggal: '2026-10-05',
+    kategori: 'Operasional & Utilitas',
+    tipe: 'Keluar',
+    metode: 'Tunai',
+    nominal: 75000,
+    keterangan: 'Tagihan Air Bersih / PDAM: Tagihan air laci lapak',
+    createdAt: '2026-10-05T11:30:00Z',
   },
 ];
 

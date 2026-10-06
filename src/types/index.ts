@@ -151,6 +151,7 @@ export type CashTransactionCategory =
   | 'Setor Bank'
   | 'Belanja Langsung'
   | 'Beli Marketplace'
+  | 'Operasional & Utilitas' // Listrik, Air, WiFi, Sewa, Kebersihan, dll.
   | 'Gaji Karyawan'
   | 'Kas Masuk Lain'
   | 'Saldo Awal'

@@ -170,6 +170,44 @@ export const ClosingFormModal: React.FC<ClosingFormModalProps> = ({
     }));
   };
 
+  const handleExpensePriceChange = (id: string, newPrice: number) => {
+    const price = Math.max(0, newPrice);
+    setExpenses(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      return {
+        ...item,
+        hargaSatuan: price,
+        nominal: item.jumlah * price,
+      };
+    }));
+  };
+
+  const handleExpenseNameChange = (id: string, newName: string) => {
+    setExpenses(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      return {
+        ...item,
+        nama: newName,
+      };
+    }));
+  };
+
+  const handleAddCustomExpense = (presetName: string = 'Token Listrik Lapak (PLN)', defaultNominal: number = 50000) => {
+    setExpenses(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        masterId: 'EXP-CUSTOM',
+        nama: presetName,
+        jumlah: 1,
+        satuan: 'transaksi',
+        hargaSatuan: defaultNominal,
+        nominal: defaultNominal,
+        catatan: 'Pengeluaran non-bahan baku lapak',
+      }
+    ]);
+  };
+
   const handleExpenseMasterChange = (id: string, masterId: string) => {
     const master = expenseMaster.find(m => m.id === masterId);
     if (!master) return;
@@ -464,46 +502,104 @@ export const ClosingFormModal: React.FC<ClosingFormModalProps> = ({
               </button>
             </div>
 
-            {/* Quick preset buttons: Termasuk Cup Rusak, Menghilangkan Kresek/Plastik */}
-            <div className="flex flex-wrap gap-1.5 mb-3 items-center">
-              <span className="text-[11px] text-slate-400 py-0.5 font-semibold">Pilih Preset Cepat:</span>
+            {/* Quick preset buttons: Termasuk Bahan Lapak & Utilitas Non-Bahan */}
+            <div className="space-y-2 mb-3">
+              {/* Row 1: Bahan Lapak Harian */}
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <span className="text-[10px] font-bold text-slate-400 py-0.5 uppercase tracking-wider">Bahan Lapak:</span>
 
-              {/* Preset Es Batu */}
-              {expenseMaster.filter(m => m.nama.toLowerCase().includes('es')).map(m => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => handleAddExpenseFromMaster(m, 3)}
-                  className="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 text-slate-700 border border-slate-200 font-medium transition cursor-pointer"
-                >
-                  + {m.nama} ({formatRupiah(m.hargaSatuan)}/{m.satuan})
-                </button>
-              ))}
+                {/* Preset Es Batu */}
+                {expenseMaster.filter(m => m.nama.toLowerCase().includes('es')).map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => handleAddExpenseFromMaster(m, 3)}
+                    className="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 text-slate-700 border border-slate-200 font-medium transition cursor-pointer"
+                  >
+                    + {m.nama} ({formatRupiah(m.hargaSatuan)}/{m.satuan})
+                  </button>
+                ))}
 
-              {/* Preset Air Galon */}
-              {expenseMaster.filter(m => m.nama.toLowerCase().includes('galon')).map(m => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => handleAddExpenseFromMaster(m, 1)}
-                  className="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 text-slate-700 border border-slate-200 font-medium transition cursor-pointer"
-                >
-                  + {m.nama} ({formatRupiah(m.hargaSatuan)}/{m.satuan})
-                </button>
-              ))}
+                {/* Preset Air Galon */}
+                {expenseMaster.filter(m => m.nama.toLowerCase().includes('galon')).map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => handleAddExpenseFromMaster(m, 1)}
+                    className="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 text-slate-700 border border-slate-200 font-medium transition cursor-pointer"
+                  >
+                    + {m.nama} ({formatRupiah(m.hargaSatuan)}/{m.satuan})
+                  </button>
+                ))}
 
-              {/* PRESET BARU: Cup Rusak / Gagal Press */}
-              {expenseMaster.filter(m => m.nama.toLowerCase().includes('cup rusak')).map(m => (
+                {/* Cup Rusak */}
+                {expenseMaster.filter(m => m.nama.toLowerCase().includes('cup rusak')).map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => handleAddExpenseFromMaster(m, 5)}
+                    className="text-[11px] px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <ShieldAlert className="w-3 h-3 text-amber-600" />
+                    + Cup Rusak ({formatRupiah(m.hargaSatuan)}/{m.satuan})
+                  </button>
+                ))}
+              </div>
+
+              {/* Row 2: Utilitas Lapak (Non-Bahan Baku) */}
+              <div className="flex flex-wrap gap-1.5 items-center p-2 rounded-2xl bg-amber-50/60 border border-amber-200/60">
+                <span className="text-[10px] font-black text-amber-800 py-0.5 uppercase tracking-wider flex items-center gap-1">
+                  ⚡ Utilitas Non-Bahan:
+                </span>
+
                 <button
-                  key={m.id}
                   type="button"
-                  onClick={() => handleAddExpenseFromMaster(m, 5)}
-                  className="text-[11px] px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold transition flex items-center gap-1 cursor-pointer"
+                  onClick={() => handleAddCustomExpense('Token Listrik Lapak (PLN)', 50000)}
+                  className="text-[11px] px-2.5 py-1 rounded-xl bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold transition cursor-pointer shadow-2xs"
                 >
-                  <ShieldAlert className="w-3 h-3 text-amber-600" />
-                  + Cup Rusak / Pecah ({formatRupiah(m.hargaSatuan)}/{m.satuan})
+                  ⚡ Token Listrik 50rb
                 </button>
-              ))}
+
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomExpense('Token Listrik Lapak (PLN)', 100000)}
+                  className="text-[11px] px-2.5 py-1 rounded-xl bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold transition cursor-pointer shadow-2xs"
+                >
+                  ⚡ Token Listrik 100rb
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomExpense('Tagihan Air Bersih / PDAM', 75000)}
+                  className="text-[11px] px-2.5 py-1 rounded-xl bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold transition cursor-pointer shadow-2xs"
+                >
+                  💧 Bayar Air PDAM
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomExpense('Tagihan Internet & WiFi Lapak', 150000)}
+                  className="text-[11px] px-2.5 py-1 rounded-xl bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold transition cursor-pointer shadow-2xs"
+                >
+                  📶 Bayar WiFi Lapak
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomExpense('Retribusi Kebersihan & Keamanan Lapak', 5000)}
+                  className="text-[11px] px-2.5 py-1 rounded-xl bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold transition cursor-pointer shadow-2xs"
+                >
+                  🧹 Retribusi Sampah 5rb
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomExpense('Pengeluaran Lainnya (Non-Bahan)', 25000)}
+                  className="text-[11px] px-2.5 py-1 rounded-xl bg-white hover:bg-purple-100 text-purple-900 border border-purple-300 font-bold transition cursor-pointer shadow-2xs"
+                >
+                  + Pengeluaran Lainnya...
+                </button>
+              </div>
             </div>
 
             {expenses.length === 0 ? (
@@ -512,88 +608,124 @@ export const ClosingFormModal: React.FC<ClosingFormModalProps> = ({
               </div>
             ) : (
               <div className="space-y-2.5">
-                {expenses.map((exp, idx) => (
-                  <div key={exp.id} className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 flex-1">
-                        <span className="text-xs text-slate-400 font-bold w-4">{idx + 1}.</span>
+                {expenses.map((exp, idx) => {
+                  const isUtility = exp.nama.toLowerCase().includes('listrik') ||
+                                    exp.nama.toLowerCase().includes('air') ||
+                                    exp.nama.toLowerCase().includes('wifi') ||
+                                    exp.nama.toLowerCase().includes('internet') ||
+                                    exp.nama.toLowerCase().includes('retribusi') ||
+                                    exp.nama.toLowerCase().includes('sewa') ||
+                                    exp.masterId === 'EXP-CUSTOM';
 
-                        {/* Select item from master list */}
-                        <select
-                          value={exp.masterId || ''}
-                          onChange={e => handleExpenseMasterChange(exp.id, e.target.value)}
-                          className="flex-1 bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-xs text-slate-800 font-semibold focus:outline-emerald-600"
-                        >
-                          {expenseMaster.map(m => (
-                            <option key={m.id} value={m.id}>
-                              {m.nama} ({formatRupiah(m.hargaSatuan)} / {m.satuan})
-                            </option>
-                          ))}
-                        </select>
+                  return (
+                    <div key={exp.id} className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="text-xs text-slate-400 font-bold w-4">{idx + 1}.</span>
+
+                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 ${
+                            isUtility
+                              ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                              : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                          }`}>
+                            {isUtility ? 'Utilitas / Non-Bahan' : 'Bahan Lapak'}
+                          </span>
+
+                          {/* Editable name if custom, otherwise dropdown */}
+                          {exp.masterId === 'EXP-CUSTOM' ? (
+                            <input
+                              type="text"
+                              value={exp.nama}
+                              onChange={e => handleExpenseNameChange(exp.id, e.target.value)}
+                              placeholder="Ketik nama pengeluaran (misal: Token Listrik, Beli Sabun, dll)..."
+                              className="flex-1 bg-white border border-amber-300 rounded-xl px-2.5 py-1 text-xs text-slate-900 font-bold focus:outline-emerald-600"
+                            />
+                          ) : (
+                            <select
+                              value={exp.masterId || ''}
+                              onChange={e => handleExpenseMasterChange(exp.id, e.target.value)}
+                              className="flex-1 bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-xs text-slate-800 font-semibold focus:outline-emerald-600"
+                            >
+                              {expenseMaster.map(m => (
+                                <option key={m.id} value={m.id}>
+                                  {m.nama} ({formatRupiah(m.hargaSatuan)} / {m.satuan})
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+
+                        {/* Inputs: Jumlah barang, Harga Satuan (Bisa diubah), Subtotal Otomatis */}
+                        <div className="flex items-center gap-2 justify-end">
+                          {/* Jumlah */}
+                          <div className="flex items-center gap-1">
+                            <label className="text-[10px] text-slate-500 font-semibold">Qty:</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={exp.jumlah === 0 ? '' : exp.jumlah}
+                              placeholder="0"
+                              onChange={e => handleExpenseQtyChange(exp.id, parseFloat(e.target.value) || 0)}
+                              className="w-14 bg-white border border-slate-300 rounded-xl px-2 py-1 text-xs text-slate-800 font-extrabold text-center focus:outline-emerald-600"
+                            />
+                            <span className="text-[10px] text-slate-500 font-medium">
+                              {exp.satuan}
+                            </span>
+                          </div>
+
+                          {/* Perkalian */}
+                          <span className="text-slate-400 text-xs">×</span>
+
+                          {/* Harga Satuan Editable */}
+                          <div className="flex items-center gap-1">
+                            <label className="text-[10px] text-slate-500 font-semibold">@Rp:</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="500"
+                              value={exp.hargaSatuan === 0 ? '' : exp.hargaSatuan}
+                              placeholder="0"
+                              onChange={e => handleExpensePriceChange(exp.id, parseFloat(e.target.value) || 0)}
+                              className="w-20 bg-white border border-slate-300 rounded-xl px-2 py-1 text-xs text-slate-800 font-extrabold text-right focus:outline-emerald-600"
+                              title="Harga satuan atau tarif pengeluaran"
+                            />
+                          </div>
+
+                          {/* Subtotal Otomatis */}
+                          <div className="w-24 text-right font-black text-red-600 text-xs">
+                            = {formatRupiah(exp.nominal)}
+                          </div>
+
+                          {/* Delete button */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveExpense(exp.id)}
+                            className="p-1 rounded-lg text-red-500 hover:bg-red-100 transition cursor-pointer"
+                            title="Hapus baris"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Inputs: Jumlah barang, Harga Satuan (Locked from Owner), Subtotal Otomatis */}
-                      <div className="flex items-center gap-2 justify-end">
-                        {/* Jumlah */}
-                        <div className="flex items-center gap-1">
-                          <label className="text-[10px] text-slate-500 font-semibold">Qty:</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="any"
-                            value={exp.jumlah === 0 ? '' : exp.jumlah}
-                            placeholder="0"
-                            onChange={e => handleExpenseQtyChange(exp.id, parseFloat(e.target.value) || 0)}
-                            className="w-16 bg-white border border-slate-300 rounded-xl px-2 py-1 text-xs text-slate-800 font-extrabold text-center focus:outline-emerald-600"
-                          />
-                          <span className="text-[10px] text-slate-500 font-medium">
-                            {exp.satuan}
-                          </span>
-                        </div>
-
-                        {/* Perkalian */}
-                        <span className="text-slate-400 text-xs">×</span>
-
-                        {/* Harga Satuan */}
-                        <div className="text-right">
-                          <span className="text-[11px] text-slate-600 font-medium">
-                            {formatRupiah(exp.hargaSatuan)}
-                          </span>
-                        </div>
-
-                        {/* Subtotal Otomatis */}
-                        <div className="w-28 text-right font-black text-red-600 text-xs">
-                          = {formatRupiah(exp.nominal)}
-                        </div>
-
-                        {/* Delete button */}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveExpense(exp.id)}
-                          className="p-1 rounded-lg text-red-500 hover:bg-red-100 transition"
-                          title="Hapus baris"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {/* Catatan / Keterangan barang */}
+                      <input
+                        type="text"
+                        placeholder="Catatan tambahan (misal: Token listrik lapak via kasir, 3 sak es jam 14.00, iuran keamanan RT)"
+                        value={exp.catatan || ''}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setExpenses(prev => prev.map(item => item.id === exp.id ? { ...item, catatan: val } : item));
+                        }}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1 text-[11px] text-slate-600 focus:outline-emerald-600"
+                      />
                     </div>
-
-                    {/* Catatan / Keterangan barang (misal: cup rusak karena mesin press seret) */}
-                    <input
-                      type="text"
-                      placeholder="Catatan tambahan (misal: 3 cup pecah karena bibir cup tidak pas, beli 3 sak es jam 14.00)"
-                      value={exp.catatan || ''}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setExpenses(prev => prev.map(item => item.id === exp.id ? { ...item, catatan: val } : item));
-                      }}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1 text-[11px] text-slate-600 focus:outline-emerald-600"
-                    />
-                  </div>
-                ))}
+                  );
+                })}
 
                 <div className="flex justify-between items-center text-xs font-bold text-red-700 px-3 py-1 bg-red-50/70 rounded-xl border border-red-100">
-                  <span>Total Pengeluaran Kas (Dihitung Otomatis):</span>
+                  <span>Total Pengeluaran Kas Lapak (Dihitung Otomatis):</span>
                   <span className="text-sm font-black">{formatRupiah(totalPengeluaran)}</span>
                 </div>
               </div>

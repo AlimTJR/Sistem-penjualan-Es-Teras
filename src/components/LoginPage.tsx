@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Coffee, Shield, User as UserIcon, Lock, ArrowRight,
   Sparkles, CheckCircle2, AlertCircle, Clock, Eye, EyeOff,
-  History, ArrowLeft, X, KeyRound, UserCheck
+  History, ArrowLeft, X, UserCheck
 } from 'lucide-react';
 import { User } from '../types';
 import { PWAInstallButton } from './PWAInstallButton';
@@ -93,7 +93,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
     const expectedPassword = found.password || '123';
     if (password !== expectedPassword && password !== '123') {
-      setErrorMessage('Kata sandi salah. Silakan periksa kembali. (Default demo: 123)');
+      setErrorMessage('Kata sandi salah. Silakan periksa kembali.');
       return;
     }
 
@@ -118,22 +118,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
     const expectedPassword = selectedRecentUser.password || '123';
     if (password !== expectedPassword && password !== '123') {
-      setErrorMessage('Kata sandi salah. Silakan periksa kembali. (Default demo: 123)');
+      setErrorMessage('Kata sandi salah. Silakan periksa kembali.');
       return;
     }
 
     addRecentUserId(selectedRecentUser.id);
     onLoginSuccess(selectedRecentUser);
-  };
-
-  // Demo auto-fill helper
-  const handleDemoFill = (demoUsername: string) => {
-    const user = users.find(u => u.username.toLowerCase() === demoUsername.toLowerCase());
-    if (user) {
-      setUsername(user.username);
-      setPassword(user.password || '123');
-      setErrorMessage(null);
-    }
   };
 
   return (
@@ -269,9 +259,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    Password demo bawaan: <strong className="text-slate-600 font-mono">123</strong>
-                  </span>
                 </div>
 
                 <div className="space-y-2 pt-1">
@@ -372,14 +359,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-slate-700 font-bold">
-                        Kata Sandi:
-                      </label>
-                      <span className="text-[10px] text-slate-400">
-                        Default Demo: <strong className="font-mono text-slate-600">123</strong>
-                      </span>
-                    </div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Kata Sandi:
+                    </label>
                     <div className="relative">
                       <Lock className="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400" />
                       <input
@@ -412,45 +394,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
-
-                {/* DEMO ACCOUNTS HELPER PILLS */}
-                <div className="pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    <span className="flex items-center gap-1">
-                      <KeyRound className="w-3 h-3 text-amber-500" />
-                      Bantuan Akun Demo (Klik untuk Isi Otomatis)
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleDemoFill('owner')}
-                      className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1"
-                    >
-                      <Shield className="w-3 h-3 text-amber-600" />
-                      <span>Owner: <strong>owner</strong> / 123</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleDemoFill('budi')}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1"
-                    >
-                      <Coffee className="w-3 h-3 text-emerald-600" />
-                      <span>Barista: <strong>budi</strong> / 123</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleDemoFill('siti')}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1"
-                    >
-                      <Coffee className="w-3 h-3 text-emerald-600" />
-                      <span>Barista: <strong>siti</strong> / 123</span>
-                    </button>
-                  </div>
-                </div>
 
               </div>
             )}

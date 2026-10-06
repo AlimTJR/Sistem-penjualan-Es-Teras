@@ -1,0 +1,185 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User accounts and operational credentials for Kedai Teras",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nama": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "karyawan"] },
+        "tarifHarian": { "type": "number" },
+        "gajiPokok": { "type": "number" },
+        "bonusPerCup": { "type": "number" },
+        "status": { "type": "string", "enum": ["aktif", "nonaktif"] },
+        "noHp": { "type": "string" },
+        "jabatan": { "type": "string" }
+      },
+      "required": ["id", "nama", "username", "role", "status"]
+    },
+    "Ingredient": {
+      "title": "Ingredient",
+      "description": "Raw material inventory with pack conversion and unit prices",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "namaBahan": { "type": "string" },
+        "satuan": { "type": "string" },
+        "satuanKemasan": { "type": "string" },
+        "isiPerPack": { "type": "number" },
+        "hargaPerPack": { "type": "number" },
+        "stokSaatIni": { "type": "number" },
+        "minStok": { "type": "number" },
+        "hargaPerSatuan": { "type": "number" }
+      },
+      "required": ["id", "namaBahan", "satuan", "stokSaatIni", "minStok", "hargaPerSatuan"]
+    },
+    "Menu": {
+      "title": "Menu",
+      "description": "Drink menu items sold at the outlet",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "namaMenu": { "type": "string" },
+        "kategori": { "type": "string", "enum": ["Teh", "Kopi", "Susu", "Yakult", "Lainnya"] },
+        "jenisCup": { "type": "string", "enum": ["16oz", "22oz"] },
+        "hargaJual": { "type": "number" },
+        "hpp": { "type": "number" },
+        "status": { "type": "string", "enum": ["aktif", "nonaktif"] }
+      },
+      "required": ["id", "namaMenu", "kategori", "jenisCup", "hargaJual", "hpp", "status"]
+    },
+    "Recipe": {
+      "title": "Recipe",
+      "description": "Recipe components per cup for backward inventory deduction and HPP",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "menuId": { "type": "string" },
+        "ingredientId": { "type": "string" },
+        "qtyPerCup": { "type": "number" }
+      },
+      "required": ["id", "menuId", "ingredientId", "qtyPerCup"]
+    },
+    "Closing": {
+      "title": "Closing",
+      "description": "Daily closing records from outlet cashier",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tanggal": { "type": "string" },
+        "totalCup": { "type": "number" },
+        "totalPenjualan": { "type": "number" },
+        "totalPengeluaran": { "type": "number" },
+        "totalPembayaranHutang": { "type": "number" },
+        "setoranBersih": { "type": "number" },
+        "status": { "type": "string" },
+        "userName": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "tanggal", "totalCup", "totalPenjualan", "setoranBersih", "userName", "userId"]
+    },
+    "Absensi": {
+      "title": "Absensi",
+      "description": "Daily employee attendance records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tanggal": { "type": "string" },
+        "userId": { "type": "string" },
+        "statusHadir": { "type": "string", "enum": ["Hadir", "Izin"] },
+        "laporanKegiatan": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "tanggal", "userId", "statusHadir"]
+    },
+    "Kasbon": {
+      "title": "Kasbon",
+      "description": "Employee cash advances and deductions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tanggal": { "type": "string" },
+        "userId": { "type": "string" },
+        "nominal": { "type": "number" },
+        "keperluan": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Disetujui", "Lunas", "Dipotong Payroll"] },
+        "sisaKasbon": { "type": "number" }
+      },
+      "required": ["id", "tanggal", "userId", "nominal", "status", "sisaKasbon"]
+    },
+    "Payroll": {
+      "title": "Payroll",
+      "description": "Monthly payroll calculations for staff",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "periodeBulan": { "type": "string" },
+        "totalHariHadir": { "type": "number" },
+        "totalCupTerjual": { "type": "number" },
+        "totalGaji": { "type": "number" },
+        "status": { "type": "string", "enum": ["Draft", "Dibayar"] }
+      },
+      "required": ["id", "userId", "periodeBulan", "totalHariHadir", "totalGaji", "status"]
+    },
+    "CashTransaction": {
+      "title": "CashTransaction",
+      "description": "Operational cash and bank transactions ledger",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tanggal": { "type": "string" },
+        "kategori": { "type": "string" },
+        "tipe": { "type": "string", "enum": ["Masuk", "Keluar"] },
+        "metode": { "type": "string", "enum": ["Tunai", "Bank Transfer", "QRIS"] },
+        "nominal": { "type": "number" },
+        "keterangan": { "type": "string" },
+        "referensiId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "tanggal", "kategori", "tipe", "metode", "nominal", "keterangan"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Kedai Teras user accounts and roles"
+    },
+    "/ingredients/{ingredientId}": {
+      "schema": "Ingredient",
+      "description": "Raw material items and current stock"
+    },
+    "/menus/{menuId}": {
+      "schema": "Menu",
+      "description": "Beverage menu catalog and HPP"
+    },
+    "/recipes/{recipeId}": {
+      "schema": "Recipe",
+      "description": "Recipes per cup for stock deductions"
+    },
+    "/closings/{closingId}": {
+      "schema": "Closing",
+      "description": "Daily closing sales records"
+    },
+    "/absensi/{absensiId}": {
+      "schema": "Absensi",
+      "description": "Employee attendance logs"
+    },
+    "/kasbon/{kasbonId}": {
+      "schema": "Kasbon",
+      "description": "Cash advances"
+    },
+    "/payrolls/{payrollId}": {
+      "schema": "Payroll",
+      "description": "Payroll statements"
+    },
+    "/cashTransactions/{txId}": {
+      "schema": "CashTransaction",
+      "description": "Cash and bank flow entries"
+    }
+  }
+}

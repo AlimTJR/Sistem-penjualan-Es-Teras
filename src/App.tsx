@@ -27,6 +27,10 @@ import { KasbonManagement } from './components/OwnerView/KasbonManagement';
 import { PayrollManagement } from './components/OwnerView/PayrollManagement';
 import { UserManagement } from './components/OwnerView/UserManagement';
 import { LoginPage } from './components/LoginPage';
+import {
+  testFirebaseConnection, saveClosingToFirestore, updateIngredientsInFirestore,
+  setupFirestoreListeners, pushStateToFirestore
+} from './utils/firebase';
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadAppState());
@@ -40,6 +44,38 @@ export default function App() {
   const currentUser = state.currentUserId
     ? state.users.find(u => u.id === state.currentUserId) || null
     : null;
+
+  // Firebase connection and real-time cloud listeners
+  useEffect(() => {
+    testFirebaseConnection().then(connected => {
+      if (connected) {
+        pushStateToFirestore(state).catch(e => console.warn('[Firebase] Initial push notice:', e));
+      }
+    });
+
+    const unsub = setupFirestoreListeners(
+      (newIngredients) => {
+        if (newIngredients && newIngredients.length > 0) {
+          setState(prev => {
+            const next = { ...prev, ingredients: newIngredients };
+            saveAppState(next);
+            return next;
+          });
+        }
+      },
+      (newClosings) => {
+        if (newClosings && newClosings.length > 0) {
+          setState(prev => {
+            const next = { ...prev, closings: newClosings };
+            saveAppState(next);
+            return next;
+          });
+        }
+      }
+    );
+
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (currentUser) {
@@ -145,6 +181,11 @@ export default function App() {
 
     setState(nextState);
     saveAppState(nextState);
+
+    // Save to Firebase Cloud
+    saveClosingToFirestore(newClosing);
+    updateIngredientsInFirestore(updatedIngredients);
+
     showToast(`Closing lapak berhasil dikirim! Kas laci & stok bahan baku otomatis terupdate.`);
   };
 
@@ -351,6 +392,7 @@ export default function App() {
     };
     setState(nextState);
     saveAppState(nextState);
+    updateIngredientsInFirestore(nextIngredients);
     showToast(`Restock ${item.namaBahan} berhasil! Kas ${isMarketplace ? 'Bank' : 'Tunai'} terpotong Rp ${realCost.toLocaleString('id-ID')} & HPP menu disesuaikan.`);
   };
 
@@ -553,6 +595,7 @@ export default function App() {
         onSelectUser={handleSelectUser}
         onLogout={handleLogout}
         onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
+        isCloudConnected={true}
         activeView={activeView}
         setActiveView={setActiveView}
       />
