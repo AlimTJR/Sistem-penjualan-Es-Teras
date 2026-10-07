@@ -1,4 +1,4 @@
-import { User, Menu, Ingredient, Recipe, Closing, Kasbon, Absensi, Payroll, OperationalExpenseMaster, CashTransaction, MonthlyClosingReport } from '../types';
+import { User, Menu, Ingredient, Recipe, Closing, Kasbon, Absensi, Payroll, OperationalExpenseMaster, CashTransaction, MonthlyClosingReport, CustomerDebt } from '../types';
 
 export const initialUsers: User[] = [
   {
@@ -701,5 +701,28 @@ export const initialMonthlyReports: MonthlyClosingReport[] = [
     selisihBank: 0,
     statusRekonsiliasi: 'Belum Dicek',
     catatanRekonsiliasi: 'Buku kas berjalan bulan Oktober 2026.',
+  },
+];
+
+export const initialCustomerDebts: CustomerDebt[] = [
+  {
+    id: 'DEBT-20261006-01',
+    tanggal: '2026-10-06', // Kemarin
+    namaPelanggan: 'Mas Joko (Driver Ojol)',
+    nominal: 25000,
+    catatan: '2 Cup Es Kopi Susu Aren 16oz (janji bayar siang ini saat narik orderan)',
+    status: 'Belum Lunas',
+    dicatatOleh: 'Budi Santoso',
+    createdAt: '2026-10-06T15:30:00Z',
+  },
+  {
+    id: 'DEBT-20261005-02',
+    tanggal: '2026-10-05',
+    namaPelanggan: 'Pak RT Bambang',
+    nominal: 40000,
+    catatan: '4 Cup Es Teh Jumbo untuk rapat warga pos ronda',
+    status: 'Belum Lunas',
+    dicatatOleh: 'Siti Rahma',
+    createdAt: '2026-10-05T20:15:00Z',
   },
 ];

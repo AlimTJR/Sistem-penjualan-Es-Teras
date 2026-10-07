@@ -22,8 +22,11 @@ export const AttendanceRecap: React.FC<AttendanceRecapProps> = ({
   const [selectedMonth, setSelectedMonth] = useState<string>('2026-10');
 
   const employees = users.filter(u => u.role === 'karyawan');
+  const employeeIds = new Set(employees.map(u => u.id));
 
   const filteredAbsensi = absensiList.filter(a => {
+    // Owner attendance does not count
+    if (!employeeIds.has(a.userId)) return false;
     const matchUser = selectedUserFilter === 'Semua' ? true : a.userId === selectedUserFilter;
     const matchMonth = a.tanggal.startsWith(selectedMonth);
     return matchUser && matchMonth;

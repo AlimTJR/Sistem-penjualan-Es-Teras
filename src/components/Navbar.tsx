@@ -15,6 +15,8 @@ interface NavbarProps {
   onLogout: () => void;
   onOpenSheetsModal: () => void;
   isCloudConnected?: boolean;
+  lastSyncTime?: string;
+  onForceSync?: () => void;
   activeView: 'karyawan' | 'owner';
   setActiveView: (view: 'karyawan' | 'owner') => void;
 }
@@ -26,6 +28,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onOpenSheetsModal,
   isCloudConnected = true,
+  lastSyncTime,
+  onForceSync,
   activeView,
   setActiveView,
 }) => {
@@ -69,11 +73,27 @@ export const Navbar: React.FC<NavbarProps> = ({
           <PWAInstallButton />
 
           {/* Firebase Cloud Live Status */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/70 border border-emerald-700/60 text-[11px] text-emerald-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <Cloud className="w-3 h-3 text-emerald-300" />
-            <span className="font-semibold">Firebase Live</span>
-          </div>
+          <button
+            type="button"
+            onClick={onForceSync}
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] transition cursor-pointer ${
+              isCloudConnected
+                ? 'bg-emerald-950/80 border-emerald-500/70 text-emerald-300 hover:bg-emerald-950'
+                : 'bg-amber-950/80 border-amber-500/70 text-amber-300 hover:bg-amber-950'
+            }`}
+            title="Klik untuk menyinkronkan data real-time dengan Google Cloud Firestore (Localhost & AI Studio)"
+          >
+            <span className={`w-2 h-2 rounded-full ${isCloudConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <Cloud className="w-3.5 h-3.5" />
+            <span className="font-bold">
+              {isCloudConnected ? 'Cloud Realtime' : 'Menghubungkan...'}
+            </span>
+            {lastSyncTime && (
+              <span className="text-[10px] text-emerald-400/80 font-mono">
+                • {lastSyncTime}
+              </span>
+            )}
+          </button>
 
           {/* Google Sheets DB button */}
           <button

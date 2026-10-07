@@ -98,6 +98,20 @@ export interface CashInItem {
   catatan?: string;
 }
 
+export interface CustomerDebt {
+  id: string;
+  tanggal: string; // YYYY-MM-DD
+  namaPelanggan: string; // Nama pelanggan yang berhutang / bon
+  nominal: number; // Jumlah hutang dalam Rupiah
+  catatan: string; // Detail item minuman / keterangan hutang
+  status: 'Belum Lunas' | 'Lunas';
+  dicatatOleh: string; // Nama karyawan / kasir
+  closingIdRef?: string;
+  tanggalLunas?: string;
+  dilunasiKe?: string;
+  createdAt: string;
+}
+
 export interface Closing {
   id: string;
   tanggal: string; // YYYY-MM-DD
@@ -110,6 +124,7 @@ export interface Closing {
   totalPengeluaran: number;
   pembayaranHutang: CashInItem[]; // Pemasukan kas / bayar hutang dari pihak luar
   totalPembayaranHutang: number;
+  customerDebts?: CustomerDebt[]; // Hutang pelanggan baru yang terjadi hari ini
   totalKas: number; // Total Kas = Penjualan + Pembayaran Hutang - Pengeluaran Cash
   catatanPeristiwa: string; // Catatan penting lapak (cuaca, mesin, stok)
   createdAt: string;
@@ -201,5 +216,6 @@ export interface AppState {
   payroll: Payroll[];
   cashTransactions: CashTransaction[];
   monthlyReports: MonthlyClosingReport[];
+  customerDebts: CustomerDebt[];
   currentUserId: string | null; // null represents the Login Page
 }

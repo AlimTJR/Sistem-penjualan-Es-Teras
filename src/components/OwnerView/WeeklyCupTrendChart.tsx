@@ -15,9 +15,10 @@ import {
 
 interface WeeklyCupTrendChartProps {
   closings: Closing[];
+  hideNominal?: boolean;
 }
 
-export const WeeklyCupTrendChart: React.FC<WeeklyCupTrendChartProps> = ({ closings }) => {
+export const WeeklyCupTrendChart: React.FC<WeeklyCupTrendChartProps> = ({ closings, hideNominal = false }) => {
   const [chartMode, setChartMode] = useState<'bar' | 'area'>('bar');
 
   // Filter operational days (Senin - Sabtu, exclude Sundays)
@@ -115,7 +116,7 @@ export const WeeklyCupTrendChart: React.FC<WeeklyCupTrendChartProps> = ({ closin
             <div className="flex justify-between items-center">
               <span className="text-slate-400">Omzet Penjualan:</span>
               <span className="font-bold text-white">
-                {formatRupiah(data.totalPenjualan)}
+                {hideNominal ? 'Rp ••••••••' : formatRupiah(data.totalPenjualan)}
               </span>
             </div>
 
@@ -215,7 +216,7 @@ export const WeeklyCupTrendChart: React.FC<WeeklyCupTrendChartProps> = ({ closin
             {formatNumber(totalWeeklyCup)} <span className="text-xs font-bold text-emerald-700">Cup</span>
           </div>
           <span className="text-[10px] text-emerald-700 block mt-0.5 font-medium">
-            Omzet: {formatRupiah(totalWeeklyOmzet)}
+            Omzet: {hideNominal ? 'Rp ••••••••' : formatRupiah(totalWeeklyOmzet)}
           </span>
         </div>
 
